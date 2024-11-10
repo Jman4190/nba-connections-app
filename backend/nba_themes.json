@@ -1,0 +1,90 @@
+[
+    {
+        "color": "bg-yellow-200",
+        "emoji": "\ud83d\udfe8",
+        "theme": "Players who have won the NBA Most Valuable Player Award",
+        "words": [
+            "Michael Jordan",
+            "LeBron James",
+            "Stephen Curry",
+            "Kareem Abdul-Jabbar"
+        ]
+    },
+    {
+        "color": "bg-yellow-200",
+        "emoji": "\ud83d\udfe8",
+        "theme": "Players who have scored 50 or more points in a single NBA game",
+        "words": [
+            "Kobe Bryant",
+            "David Thompson",
+            "James Harden",
+            "Wilt Chamberlain"
+        ]
+    },
+    {
+        "color": "bg-green-200",
+        "emoji": "\ud83d\udfe9",
+        "theme": "Players who have won the NBA Most Valuable Player Award, but never won an NBA Championship",
+        "words": [
+            "Charles Barkley",
+            "Steve Nash",
+            "Derrick Rose",
+            "Allen Iverson"
+        ]
+    },
+    {
+        "color": "bg-green-200",
+        "emoji": "\ud83d\udfe9",
+        "theme": "Players who were selected as NBA All-Stars during their rookie season",
+        "words": [
+            "Chris Paul",
+            "Tim Duncan",
+            "Yao Ming",
+            "Kemba Walker"
+        ]
+    },
+    {
+        "color": "bg-blue-200",
+        "emoji": "\ud83d\udfe6",
+        "theme": "Players Who Have Won the NBA MVP Award in the 2000s",
+        "words": [
+            "Shaquille O'Neal",
+            "Steve Nash",
+            "Kobe Bryant",
+            "LeBron James"
+        ]
+    },
+    {
+        "color": "bg-blue-200",
+        "emoji": "\ud83d\udfe6",
+        "theme": "Players Who Have Scored 50 or More Points in a Single NBA Game",
+        "words": [
+            "Klay Thompson",
+            "David Robinson",
+            "Allen Iverson",
+            "Michael Jordan"
+        ]
+    },
+    {
+        "color": "bg-purple-200",
+        "emoji": "\ud83d\udfea",
+        "theme": "Players with at least 10 All-Star selections",
+        "words": [
+            "LeBron James",
+            "Kareem Abdul-Jabbar",
+            "Michael Jordan",
+            "Kevin Garnett"
+        ]
+    },
+    {
+        "color": "bg-purple-200",
+        "emoji": "\ud83d\udfea",
+        "theme": "Players who have won both the MVP and Finals MVP awards in the same season",
+        "words": [
+            "Stephen Curry",
+            "Shaquille O'Neal",
+            "Tim Duncan",
+            "Magic Johnson"
+        ]
+    }
+]

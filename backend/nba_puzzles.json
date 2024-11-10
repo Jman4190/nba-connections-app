@@ -1,0 +1,98 @@
+[
+  {
+    "groups": [
+      {
+        "color": "bg-yellow-200",
+        "emoji": "\ud83d\udfe8",
+        "theme": "NBA MVPs from 2010 to 2015",
+        "words": [
+          "LeBron James",
+          "Derrick Rose",
+          "Kevin Durant",
+          "Stephen Curry"
+        ]
+      },
+      {
+        "color": "bg-green-200",
+        "emoji": "\ud83d\udfe9",
+        "theme": "1983 76ers Championship Roster",
+        "words": [
+          "MOSES MALONE",
+          "JULIUS IRVING",
+          "ANDREW TONEY",
+          "MAURICE CHEEKS"
+        ]
+      },
+      {
+        "color": "bg-blue-200",
+        "emoji": "\ud83d\udfe6",
+        "theme": "Won the NBA Most Improved Player Award",
+        "words": [
+          "Tracy McGrady",
+          "Jimmy Butler",
+          "Kevin Love",
+          "Pascal Siakam"
+        ]
+      },
+      {
+        "color": "bg-purple-200",
+        "emoji": "\ud83d\udfea",
+        "theme": "Led the League in Both Steals and Assists in the Same Season",
+        "words": [
+          "Chris Paul",
+          "John Stockton",
+          "Magic Johnson",
+          "Michael Ray Richardson"
+        ]
+      }
+    ]
+  },
+  {
+    "groups": [
+      {
+        "color": "bg-yellow-200",
+        "emoji": "\ud83d\udfe8",
+        "theme": "All-Time Assist Leaders",
+        "words": [
+          "John Stockton",
+          "Jason Kidd",
+          "Chris Paul",
+          "LeBron James"
+        ]
+      },
+      {
+        "color": "bg-green-200",
+        "emoji": "\ud83d\udfe9",
+        "theme": "Won Both NBA MVP and Finals MVP in the Same Year",
+        "words": [
+          "Moses Malone",
+          "Shaquille O'Neal",
+          "Hakeem Olajuwon",
+          "Tim Duncan"
+        ]
+      },
+      {
+        "color": "bg-blue-200",
+        "emoji": "\ud83d\udfe6",
+        "theme": "Played in the Olympics for Countries Other Than the USA",
+        "words": [
+          "Pau Gasol",
+          "Tony Parker",
+          "Manu Ginobili",
+          "Dirk Nowitzki"
+        ]
+      },
+      {
+        "color": "bg-purple-200",
+        "emoji": "\ud83d\udfea",
+        "theme": "Top 4 PPG scorers in 2004",
+        "words": [
+          "TRACY MCGRADY",
+          "KEVIN GARNETT",
+          "KOBE BRYANT",
+          "PEJA STOJAKOVIC"
+        ]
+      }
+    ]
+  }
+]

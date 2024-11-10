@@ -13,7 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
 import BasketballIcon from '@/components/ui/BasketballIcon'
 import Link from 'next/link'
 
@@ -44,6 +44,15 @@ interface Puzzle {
   groups: Group[];
   author: string;
 }
+
+const supabaseUrl = process.env.SUPABASE_URL
+const supabaseKey = process.env.SUPABASE_KEY
+
+// For client-side components, we need NEXT_PUBLIC_ prefix
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || supabaseUrl || '',
+  process.env.NEXT_PUBLIC_SUPABASE_KEY || supabaseKey || ''
+)
 
 export default function NBAConnectionsGame() {
   const [gamePhase, setGamePhase] = useState<'loading' | 'ready' | 'playing'>('loading');
@@ -168,12 +177,6 @@ export default function NBAConnectionsGame() {
         const newCompletedGroups = [...completedGroups, matchingGroup];
         setCompletedGroups(newCompletedGroups);
         
-        // If this was the last group and we still have mistakes left
-        if (newCompletedGroups.length === puzzle?.groups.length && mistakes > 0) {
-          setShowConfetti(true);
-          setTimeout(() => setShowConfetti(false), 5000);
-        }
-        
         const newTiles = tiles.filter(tile => !selectedWords.includes(tile.word))
         const completedTiles = tiles.filter(tile => selectedWords.includes(tile.word))
           .map(tile => ({ ...tile, isSelected: false, group: matchingGroup.theme, isAnimating: false }))
@@ -260,10 +263,12 @@ export default function NBAConnectionsGame() {
       setTiles(prevTiles => prevTiles.map(tile => ({ ...tile, isSelected: false })));
       setGameFinished(true);
       
-      // For wins, go straight to results
+      // For wins, go straight to results and fire confetti
       if (isWin) {
         setJustEnded(true);
         setTimeout(() => {
+          setShowConfetti(true);
+          setTimeout(() => setShowConfetti(false), 5000);
           setShowResults(true);
         }, 1000);
         return;
