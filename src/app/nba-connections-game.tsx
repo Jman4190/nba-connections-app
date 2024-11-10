@@ -328,7 +328,6 @@ export default function NBAConnectionsGame() {
                 tile.isSelected ? 'bg-gray-700 text-white' : 'bg-gray-100'
               }`}
               animate={tile.isAnimating ? { scale: [1, 1.1, 1] } : {}}
-              whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
               <motion.span
