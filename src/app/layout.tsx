@@ -1,15 +1,22 @@
-import '@/styles/globals.css'
-import { Libre_Franklin } from 'next/font/google'
-import { Toaster } from "@/components/ui/toaster"
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
+import '../styles/globals.css'
 
-const libreFranklin = Libre_Franklin({ 
-  weight: ['300', '400', '500', '600', '700'],
-  subsets: ['latin'] 
-})
+const inter = Inter({ subsets: ['latin'] })
 
-export const metadata = {
-  title: 'NBA Connections Game',
-  description: 'A daily NBA-themed connections puzzle game',
+export const metadata: Metadata = {
+  title: 'NBA Connections',
+  description: 'Group NBA players that share a common thread.',
+  openGraph: {
+    title: 'NBA Connections',
+    description: 'Group NBA players that share a common thread.',
+    images: ['/og-image.png'],
+  },
+  icons: {
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
+  },
 }
 
 export default function RootLayout({
@@ -19,10 +26,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={libreFranklin.className}>
-        {children}
-        <Toaster />
-      </body>
+      <head>
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="NBA Connections" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+      </head>
+      <body className={inter.className}>{children}</body>
     </html>
   )
 }
