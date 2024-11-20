@@ -1,21 +1,27 @@
-import type { Metadata } from 'next'
+import { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import '../styles/globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
 
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3001'
+
 export const metadata: Metadata = {
+  metadataBase: new URL(baseUrl),
   title: 'NBA Connections',
   description: 'Group NBA players that share a common thread.',
   openGraph: {
     title: 'NBA Connections',
     description: 'Group NBA players that share a common thread.',
-    images: ['/og-image.png'],
+    url: baseUrl,
+    siteName: 'NBA Connections',
+    locale: 'en_US',
+    type: 'website',
   },
-  icons: {
-    icon: '/favicon.ico',
-    shortcut: '/favicon.ico',
-    apple: '/apple-touch-icon.png',
+  twitter: {
+    title: 'NBA Connections',
+    description: 'Group NBA players that share a common thread.',
+    card: 'summary_large_image',
   },
 }
 

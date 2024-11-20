@@ -38,7 +38,7 @@ interface Guess {
 }
 
 interface Puzzle {
-  id: number;
+  puzzle_id: number;
   date: string;
   groups: Group[];
   author: string;
@@ -72,13 +72,19 @@ export default function NBAConnectionsGame() {
   }, []); // This effect runs once when the component mounts
 
   const fetchPuzzleOfTheDay = async () => {
-    const today = new Date().toISOString().split('T')[0];
-    console.log('Fetching puzzle for date:', today);
+    // Get local date in YYYY-MM-DD format
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const formattedDate = `${year}-${month}-${day}`;
+    
+    console.log('Fetching puzzle for date:', formattedDate);
 
     const { data, error } = await supabase
       .from('puzzles')
       .select('*')
-      .eq('date', today)
+      .eq('date', formattedDate)
       .single();
 
     if (error) {
@@ -401,7 +407,7 @@ export default function NBAConnectionsGame() {
 
   const handleShareResults = () => {
     const resultsText = `NBA Connections
-Puzzle #${puzzle?.id}
+Puzzle #${puzzle?.puzzle_id}
 ${guesses.map(guess => 
   guess.selectedWords.map(word => {
     const correctGroup = puzzle?.groups.find(group => group.words.includes(word));
@@ -436,7 +442,7 @@ ${guesses.map(guess =>
           {mistakes === 0 && (
             <p className="text-lg mb-2">See you tomorrow for a rematch</p>
           )}
-          <p className="text-lg mb-2">NBA Connections #{puzzle?.id}</p>
+          <p className="text-lg mb-2">NBA Connections #{puzzle?.puzzle_id}</p>
           <div className="flex flex-col items-center gap-1 mb-4">
             {guesses.map((guess, index) => (
               <div key={index} className="flex gap-1">
@@ -582,7 +588,7 @@ ${guesses.map(guess =>
           <p className="text-sm text-gray-600">{getCurrentDate()}</p>
           {puzzle && (
             <>
-              <p className="text-sm text-gray-600">No. {puzzle.id}</p>
+              <p className="text-sm text-gray-600">No. {puzzle.puzzle_id}</p>
               <p className="text-sm text-gray-600">Edited by {puzzle.author}</p>
             </>
           )}
