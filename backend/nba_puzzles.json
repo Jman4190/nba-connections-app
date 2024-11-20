@@ -4,45 +4,45 @@
       {
         "color": "bg-yellow-200",
         "emoji": "\ud83d\udfe8",
-        "theme": "NBA MVPs from 2010 to 2015",
+        "theme": "Won NBA Rookie of the Year Since 2010",
         "words": [
-          "LeBron James",
-          "Derrick Rose",
-          "Kevin Durant",
-          "Stephen Curry"
+          "Kyrie Irving",
+          "Damian Lillard",
+          "Ben Simmons",
+          "Ja Morant"
         ]
       },
       {
         "color": "bg-green-200",
         "emoji": "\ud83d\udfe9",
-        "theme": "1983 76ers Championship Roster",
+        "theme": "Defensive Player of the Year Award Winners",
         "words": [
-          "MOSES MALONE",
-          "JULIUS IRVING",
-          "ANDREW TONEY",
-          "MAURICE CHEEKS"
+          "Kawhi Leonard",
+          "Marcus Camby",
+          "Tyson Chandler",
+          "Marc Gasol"
         ]
       },
       {
         "color": "bg-blue-200",
         "emoji": "\ud83d\udfe6",
-        "theme": "Won the NBA Most Improved Player Award",
+        "theme": "#3 Overall Draft Picks",
         "words": [
-          "Tracy McGrady",
-          "Jimmy Butler",
-          "Kevin Love",
-          "Pascal Siakam"
+          "EVAN MOBLEY",
+          "LAMELO BALL",
+          "JAYSON TATUM",
+          "JERRY STACKHOUSE"
         ]
       },
       {
         "color": "bg-purple-200",
         "emoji": "\ud83d\udfea",
-        "theme": "Led the League in Both Steals and Assists in the Same Season",
+        "theme": "All-Stars in Three Different Decades",
         "words": [
-          "Chris Paul",
-          "John Stockton",
-          "Magic Johnson",
-          "Michael Ray Richardson"
+          "Dirk Nowitzki",
+          "Kevin Garnett",
+          "Tim Duncan",
+          "Vince Carter"
         ]
       }
     ]
@@ -52,45 +52,45 @@
       {
         "color": "bg-yellow-200",
         "emoji": "\ud83d\udfe8",
-        "theme": "All-Time Assist Leaders",
+        "theme": "Players with last name Smith",
         "words": [
-          "John Stockton",
-          "Jason Kidd",
-          "Chris Paul",
-          "LeBron James"
+          "JOSH SMITH",
+          "JR SMITH",
+          "ISH SMITH",
+          "STEVEN SMITH"
         ]
       },
       {
         "color": "bg-green-200",
         "emoji": "\ud83d\udfe9",
-        "theme": "Won Both NBA MVP and Finals MVP in the Same Year",
+        "theme": "Drafted Directly from High School",
         "words": [
-          "Moses Malone",
-          "Shaquille O'Neal",
-          "Hakeem Olajuwon",
-          "Tim Duncan"
+          "Kevin Garnett",
+          "Kobe Bryant",
+          "LeBron James",
+          "Dwight Howard"
         ]
       },
       {
         "color": "bg-blue-200",
         "emoji": "\ud83d\udfe6",
-        "theme": "Played in the Olympics for Countries Other Than the USA",
+        "theme": "Made All-Star Teams in Both Conferences",
         "words": [
-          "Pau Gasol",
-          "Tony Parker",
-          "Manu Ginobili",
-          "Dirk Nowitzki"
+          "Kevin Durant",
+          "Carmelo Anthony",
+          "Damian Lillard",
+          "Shaquille O'Neal"
         ]
       },
       {
         "color": "bg-purple-200",
         "emoji": "\ud83d\udfea",
-        "theme": "Top 4 PPG scorers in 2004",
+        "theme": "Won NBA Championships with the Celtics in the 1980s",
         "words": [
-          "TRACY MCGRADY",
-          "KEVIN GARNETT",
-          "KOBE BRYANT",
-          "PEJA STOJAKOVIC"
+          "Dennis Johnson",
+          "Danny Ainge",
+          "Robert Parish",
+          "Kevin McHale"
         ]
       }
     ]

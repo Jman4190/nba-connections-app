@@ -39,7 +39,6 @@ interface Guess {
 
 interface Puzzle {
   id: number;
-  puzzle_id: number;
   date: string;
   groups: Group[];
   author: string;
@@ -402,7 +401,7 @@ export default function NBAConnectionsGame() {
 
   const handleShareResults = () => {
     const resultsText = `NBA Connections
-Puzzle #${puzzle?.puzzle_id}
+Puzzle #${puzzle?.id}
 ${guesses.map(guess => 
   guess.selectedWords.map(word => {
     const correctGroup = puzzle?.groups.find(group => group.words.includes(word));
@@ -437,7 +436,7 @@ ${guesses.map(guess =>
           {mistakes === 0 && (
             <p className="text-lg mb-2">See you tomorrow for a rematch</p>
           )}
-          <p className="text-lg mb-2">NBA Connections #{puzzle?.puzzle_id}</p>
+          <p className="text-lg mb-2">NBA Connections #{puzzle?.id}</p>
           <div className="flex flex-col items-center gap-1 mb-4">
             {guesses.map((guess, index) => (
               <div key={index} className="flex gap-1">
@@ -583,7 +582,7 @@ ${guesses.map(guess =>
           <p className="text-sm text-gray-600">{getCurrentDate()}</p>
           {puzzle && (
             <>
-              <p className="text-sm text-gray-600">No. {puzzle.puzzle_id}</p>
+              <p className="text-sm text-gray-600">No. {puzzle.id}</p>
               <p className="text-sm text-gray-600">Edited by {puzzle.author}</p>
             </>
           )}

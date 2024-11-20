@@ -98,23 +98,22 @@ def mark_themes_as_used(themes):
 
 
 # Function to assemble puzzles from themes
-def assemble_puzzles_from_themes(themes, num_puzzles):
+def assemble_puzzles_from_themes(themes, num_puzzles, max_attempts=50):
     # Organize themes by color
     themes_by_color = {color["color_code"]: [] for color in colors}
     for theme in themes:
         themes_by_color[theme.color].append(theme)
 
     puzzles = []
-    max_attempts_per_puzzle = 10
+    attempts_per_puzzle = max_attempts
 
-    while len(puzzles) < num_puzzles:
-        selected_themes = []
-        attempt_count = 0
-
-        while attempt_count < max_attempts_per_puzzle:
+    for puzzle_num in range(num_puzzles):
+        for attempt in range(attempts_per_puzzle):
             selected_themes = []
             valid_combination = True
+            all_players = set()
 
+            # Try to build a valid puzzle
             for color in colors:
                 color_code = color["color_code"]
                 available_themes = themes_by_color[color_code]
@@ -124,33 +123,47 @@ def assemble_puzzles_from_themes(themes, num_puzzles):
                     logging.warning(f"No themes available for color {color['name']}")
                     break
 
-                selected_theme = random.choice(available_themes)
-                selected_themes.append(selected_theme)
+                # Try multiple themes for this color until we find one without overlap
+                for _ in range(len(available_themes)):
+                    theme = random.choice(available_themes)
+                    if not any(player in all_players for player in theme.words):
+                        selected_themes.append(theme)
+                        all_players.update(theme.words)
+                        break
+                    available_themes.remove(theme)
+                else:
+                    valid_combination = False
+                    break
 
-            if not valid_combination:
-                break
+            if valid_combination and len(all_players) == 16:
+                # Convert ThemeGroup objects to dictionaries
+                serialized_groups = [
+                    {
+                        "color": theme.color,
+                        "emoji": theme.emoji,
+                        "theme": theme.theme,
+                        "words": theme.words,
+                    }
+                    for theme in selected_themes
+                ]
 
-            # Check for overlapping players
-            all_players = []
-            for theme in selected_themes:
-                all_players.extend(theme.words)
+                puzzles.append({"groups": serialized_groups})
 
-            if len(set(all_players)) == 16:
-                puzzles.append({"groups": selected_themes})
-                # Remove used themes from available pool only
+                # Remove used themes
                 for theme in selected_themes:
                     themes_by_color[theme.color].remove(theme)
+
                 logging.info(
-                    f"Found valid puzzle combination after {attempt_count + 1} attempts"
+                    f"Found valid puzzle {puzzle_num + 1} after {attempt + 1} attempts"
                 )
                 break
-            else:
-                attempt_count += 1
-                if attempt_count == max_attempts_per_puzzle:
-                    logging.error(
-                        f"Failed to find non-overlapping combination after {max_attempts_per_puzzle} attempts"
-                    )
 
+            if attempt == attempts_per_puzzle - 1:
+                logging.error(
+                    f"Failed to generate puzzle {puzzle_num + 1} after {attempts_per_puzzle} attempts"
+                )
+
+    logging.info(f"Successfully generated {len(puzzles)}/{num_puzzles} puzzles")
     return puzzles
 
 

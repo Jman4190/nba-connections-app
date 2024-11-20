@@ -4,6 +4,7 @@ from pydantic import BaseModel
 import json
 from datetime import datetime, timezone, timedelta
 from supabase_client import supabase
+import logging
 
 
 class PuzzleGroup(BaseModel):
@@ -17,9 +18,11 @@ class Puzzle(BaseModel):
     groups: List[PuzzleGroup]
 
 
-def validate_puzzle_structure(puzzle: Union[Dict, Puzzle]) -> Dict:
+def validate_puzzle_structure(puzzle: Dict) -> Dict:
     errors = []
-    groups = puzzle.get("groups", puzzle) if isinstance(puzzle, dict) else puzzle.groups
+
+    # Access groups as a list of dictionaries
+    groups = puzzle.get("groups", [])
 
     # Validate group count
     if len(groups) != 4:
@@ -28,17 +31,16 @@ def validate_puzzle_structure(puzzle: Union[Dict, Puzzle]) -> Dict:
     # Validate words and uniqueness
     all_words = []
     for group in groups:
-        words = (
-            group.words if isinstance(group, PuzzleGroup) else group.get("words", [])
-        )
+        words = group.get("words", [])
+        theme = group.get("theme", "Unknown theme")
 
         if len(words) != 4:
             errors.append(
-                f"Theme '{group.theme}' must have exactly 4 words (found {len(words)})"
+                f"Theme '{theme}' must have exactly 4 words (found {len(words)})"
             )
 
         if len(set(words)) != len(words):
-            errors.append(f"Theme '{group.theme}' contains duplicate words")
+            errors.append(f"Theme '{theme}' contains duplicate words")
 
         all_words.extend(words)
 
@@ -49,10 +51,7 @@ def validate_puzzle_structure(puzzle: Union[Dict, Puzzle]) -> Dict:
         )
 
     # Validate colors
-    colors = [
-        group.color if isinstance(group, PuzzleGroup) else group.get("color", "")
-        for group in groups
-    ]
+    colors = [group.get("color", "") for group in groups]
     required_colors = {"bg-yellow-200", "bg-green-200", "bg-blue-200", "bg-purple-200"}
     if set(colors) != required_colors:
         errors.append(f"Missing or invalid colors. Required: {required_colors}")
@@ -60,38 +59,23 @@ def validate_puzzle_structure(puzzle: Union[Dict, Puzzle]) -> Dict:
     return {"valid": len(errors) == 0, "errors": errors}
 
 
-def validate_puzzles(puzzles: Union[List[Dict], List[Puzzle]]) -> List[Dict]:
+def validate_puzzles(puzzles):
     results = []
     print(f"\nValidating {len(puzzles)} puzzle(s)...")
 
-    # Get start date for puzzle sequence
-    start_date = get_latest_puzzle_date()
-
     for i, puzzle in enumerate(puzzles, 1):
-        print(f"\nValidating Puzzle {i}...")
+        print(f"Validating Puzzle {i}...")
+        try:
+            # The puzzle is already in dictionary format, just validate it directly
+            validation_result = validate_puzzle_structure(puzzle)
+            validation_result["puzzle_number"] = i
+            results.append(validation_result)
 
-        validation = validate_puzzle_structure(puzzle)
-        if not validation["valid"]:
+        except Exception as e:
+            logging.error(f"Failed to validate puzzle {i}: {str(e)}")
             results.append(
-                {
-                    "puzzle_number": i,
-                    "valid": False,
-                    "errors": validation["errors"],
-                    "inserted": False,
-                }
+                {"valid": False, "inserted": False, "error": str(e), "puzzle_number": i}
             )
-            print("❌ Structure validation failed:")
-            for error in validation["errors"]:
-                print(f"  - {error}")
-            continue
-
-        # Insert valid puzzle into database
-        inserted = insert_puzzle(puzzle, i, start_date)
-
-        results.append(
-            {"puzzle_number": i, "valid": True, "errors": None, "inserted": inserted}
-        )
-        print("✅ Puzzle valid")
 
     return results
 
@@ -115,13 +99,12 @@ def get_latest_puzzle_date():
 
 def insert_puzzle(puzzle: Dict, puzzle_number: int, start_date: datetime) -> bool:
     try:
-        # Use timedelta directly, not timezone.timedelta
         puzzle_date = start_date + timedelta(days=puzzle_number - 1)
 
         data = {
             "puzzle_id": puzzle_number,
             "date": puzzle_date.isoformat(),
-            "groups": puzzle["groups"],
+            "groups": puzzle["groups"],  # Already in correct format
             "author": "admin",
         }
 
@@ -150,18 +133,21 @@ def main():
 
     # Print summary
     print("\n=== Validation Summary ===")
-    valid_count = sum(1 for r in results if r["valid"])
-    inserted_count = sum(1 for r in results if r["inserted"])
+    valid_count = sum(1 for r in results if r.get("valid", False))
+    inserted_count = sum(1 for r in results if r.get("inserted", False))
     print(f"Valid puzzles: {valid_count}/{len(results)}")
     print(f"Inserted puzzles: {inserted_count}/{valid_count}")
 
     if valid_count != len(results):
         print("\nInvalid puzzles:")
         for result in results:
-            if not result["valid"]:
+            if not result.get("valid", False):
                 print(f"\nPuzzle {result['puzzle_number']}:")
-                for error in result["errors"]:
-                    print(f"  - {error}")
+                if "errors" in result:
+                    for error in result["errors"]:
+                        print(f"  - {error}")
+                elif "error" in result:
+                    print(f"  - {result['error']}")
 
 
 if __name__ == "__main__":
