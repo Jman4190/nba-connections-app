@@ -1,3 +1,6 @@
+# Read the Blog Post Tutorial
+[Building a NBA Connections Web App with AI Tools](https://jman4190.medium.com/building-a-nba-connections-web-app-64a76a3faa35)
+
 # NBA Connections Game
 
 A daily word association game where players group NBA players by their shared characteristics. Inspired by the NYT Connections game but focused on NBA players and their unique attributes.
