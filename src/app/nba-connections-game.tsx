@@ -42,6 +42,7 @@ interface Puzzle {
   date: string;
   groups: Group[];
   author: string;
+  todays_theme: string;
 }
 
 const supabaseUrl = process.env.SUPABASE_URL
@@ -616,7 +617,9 @@ ${guesses.map(guess =>
               <h2 className="text-xs font-semibold text-center text-white">TODAY'S THEME</h2>
             </div>
             <div className="bg-white rounded-b-lg mb-2 px-4 py-1 shadow-sm">
-              <h3 className="text-lg font-extrabold text-center text-gray-800">Jersey Numbers</h3>
+              <h3 className="text-lg font-extrabold text-center text-gray-800">
+                {puzzle?.todays_theme || 'Loading...'}
+              </h3>
             </div>
             <div className="flex flex-col">
               {renderCompletedGroups()}
