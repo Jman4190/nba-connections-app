@@ -622,11 +622,11 @@ ${guesses.map(guess =>
             </div>
           ) : (
             <div className="flex-grow flex flex-col justify-center">
-              <div className="bg-[#E87503] rounded-t-lg mb-1 px-4 py-2">
-                <h2 className="text-sm font-semibold text-center text-white">TODAY'S THEME</h2>
+              <div className="bg-[#E87503] rounded-t-lg mb-0.5 px-4 py-0.5">
+                <h2 className="text-xs font-semibold text-center text-white">TODAY'S THEME</h2>
               </div>
-              <div className="bg-white rounded-b-lg mb-6 px-4 py-3 shadow-sm">
-                <h3 className="text-xl font-extrabold text-center text-gray-800">Jersey Numbers</h3>
+              <div className="bg-white rounded-b-lg mb-2 px-4 py-1 shadow-sm">
+                <h3 className="text-lg font-extrabold text-center text-gray-800">Jersey Numbers</h3>
               </div>
               <div className="flex flex-col">
                 {renderCompletedGroups()}
