@@ -540,7 +540,7 @@ ${guesses.map(guess =>
           </ul>
           <h3 className="font-bold mt-4">Category Examples</h3>
           <ul className="list-disc pl-5 space-y-2">
-            <li>Players that wore the number 3: Allen Iverson, Chris Paul, Dennis Johnson, Dražen Petrović</li>
+            <li>Players that wore the number 3: Allen Iverson, Chris Paul, Dennis Johnson, Dražen Petrovi</li>
             <li>Players drafted in 2003: Lebron James, Chris Bosh, Dwayne Wade, Carmelo Anthony</li>
           </ul>
           <p>Each puzzle has exactly one solution and is meant to be tricky by having players that could fit into multiple categories.</p>
@@ -622,7 +622,12 @@ ${guesses.map(guess =>
             </div>
           ) : (
             <div className="flex-grow flex flex-col justify-center">
-              <h2 className="text-base sm:text-lg font-bold text-center mb-4 sm:mb-6">Create four groups of four!</h2>
+              <div className="bg-[#E87503] rounded-t-lg mb-1 px-4 py-2">
+                <h2 className="text-sm font-semibold text-center text-white">TODAY'S THEME</h2>
+              </div>
+              <div className="bg-white rounded-b-lg mb-6 px-4 py-3 shadow-sm">
+                <h3 className="text-xl font-extrabold text-center text-gray-800">Jersey Numbers</h3>
+              </div>
               <div className="flex flex-col">
                 {renderCompletedGroups()}
                 {renderTiles()}
