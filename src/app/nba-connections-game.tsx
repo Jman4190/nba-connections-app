@@ -611,86 +611,75 @@ ${guesses.map(guess =>
       {renderHeader()}
       <div className="p-1 sm:p-2 flex-grow flex flex-col items-center w-full">
         <div className="w-full max-w-3xl">
-          <div className="mb-4 sm:mb-6 flex justify-between items-baseline">
-            {/* Remove the existing title here */}
+          <div className="flex-grow flex flex-col justify-center">
+            <div className="bg-[#E87503] rounded-t-lg mb-0.5 px-4 py-0.5">
+              <h2 className="text-xs font-semibold text-center text-white">TODAY'S THEME</h2>
+            </div>
+            <div className="bg-white rounded-b-lg mb-2 px-4 py-1 shadow-sm">
+              <h3 className="text-lg font-extrabold text-center text-gray-800">Jersey Numbers</h3>
+            </div>
+            <div className="flex flex-col">
+              {renderCompletedGroups()}
+              {renderTiles()}
+              {completedGroups.length !== puzzle?.groups.length && (
+                <div className="flex items-center justify-center space-x-1 my-3 sm:my-4">
+                  <span className="text-xs">Timeouts Remaining:</span>
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className={`w-2 h-2 rounded-full ${i < mistakes ? 'bg-gray-600' : 'bg-gray-300'}`} />
+                  ))}
+                </div>
+              )}
+              {completedGroups.length === puzzle?.groups.length ? (
+                <div className="flex justify-center mt-3 sm:mt-4">
+                  <Button 
+                    className="text-xs bg-black text-white hover:bg-gray-800 rounded-full px-6 py-2" 
+                    onClick={() => setShowResults(true)}
+                  >
+                    View Box Score
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex justify-center space-x-2 mt-3 sm:mt-4">
+                  <Button 
+                    onClick={handleShuffle} 
+                    className="text-xs bg-white text-black border border-black hover:bg-gray-100 rounded-full px-3 py-1"
+                  >
+                    Shuffle
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={handleDeselectAll}
+                    disabled={selectedCount === 0}
+                    className={`text-xs border rounded-full px-3 py-1 ${
+                      selectedCount > 0 
+                        ? 'bg-white text-black border-black hover:bg-gray-100' 
+                        : 'bg-gray-100 text-gray-400 border-gray-300'
+                    }`}
+                  >
+                    Subsitute All
+                  </Button>
+                  <Button 
+                    onClick={handleSubmit}
+                    disabled={
+                      selectedCount !== 4 || 
+                      guesses.some(guess => 
+                        JSON.stringify(guess.selectedWords.sort()) === JSON.stringify(tiles.filter(tile => tile.isSelected).map(tile => tile.word).sort())
+                      )
+                    }
+                    className={`text-xs rounded-full px-3 py-1 ${
+                      selectedCount === 4 && !guesses.some(guess => 
+                        JSON.stringify(guess.selectedWords.sort()) === JSON.stringify(tiles.filter(tile => tile.isSelected).map(tile => tile.word).sort())
+                      )
+                        ? 'bg-black text-white hover:bg-gray-800' 
+                        : 'bg-gray-100 text-gray-400 border border-gray-300'
+                    }`}
+                  >
+                    Shoot!
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
-          {showResults ? (
-            <div className="mb-4 flex-grow flex items-center justify-center">
-              <div className="bg-white p-4 rounded-lg shadow-lg w-full">
-                {renderResults()}
-              </div>
-            </div>
-          ) : (
-            <div className="flex-grow flex flex-col justify-center">
-              <div className="bg-[#E87503] rounded-t-lg mb-0.5 px-4 py-0.5">
-                <h2 className="text-xs font-semibold text-center text-white">TODAY'S THEME</h2>
-              </div>
-              <div className="bg-white rounded-b-lg mb-2 px-4 py-1 shadow-sm">
-                <h3 className="text-lg font-extrabold text-center text-gray-800">Jersey Numbers</h3>
-              </div>
-              <div className="flex flex-col">
-                {renderCompletedGroups()}
-                {renderTiles()}
-                {completedGroups.length !== puzzle?.groups.length && (
-                  <div className="flex items-center justify-center space-x-1 my-3 sm:my-4">
-                    <span className="text-xs">Timeouts Remaining:</span>
-                    {[...Array(4)].map((_, i) => (
-                      <div key={i} className={`w-2 h-2 rounded-full ${i < mistakes ? 'bg-gray-600' : 'bg-gray-300'}`} />
-                    ))}
-                  </div>
-                )}
-                {completedGroups.length === puzzle?.groups.length ? (
-                  <div className="flex justify-center mt-3 sm:mt-4">
-                    <Button 
-                      className="text-xs bg-black text-white hover:bg-gray-800 rounded-full px-6 py-2" 
-                      onClick={() => setShowResults(true)}
-                    >
-                      View Box Score
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex justify-center space-x-2 mt-3 sm:mt-4">
-                    <Button 
-                      onClick={handleShuffle} 
-                      className="text-xs bg-white text-black border border-black hover:bg-gray-100 rounded-full px-3 py-1"
-                    >
-                      Shuffle
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      onClick={handleDeselectAll}
-                      disabled={selectedCount === 0}
-                      className={`text-xs border rounded-full px-3 py-1 ${
-                        selectedCount > 0 
-                          ? 'bg-white text-black border-black hover:bg-gray-100' 
-                          : 'bg-gray-100 text-gray-400 border-gray-300'
-                      }`}
-                    >
-                      Subsitute All
-                    </Button>
-                    <Button 
-                      onClick={handleSubmit}
-                      disabled={
-                        selectedCount !== 4 || 
-                        guesses.some(guess => 
-                          JSON.stringify(guess.selectedWords.sort()) === JSON.stringify(tiles.filter(tile => tile.isSelected).map(tile => tile.word).sort())
-                        )
-                      }
-                      className={`text-xs rounded-full px-3 py-1 ${
-                        selectedCount === 4 && !guesses.some(guess => 
-                          JSON.stringify(guess.selectedWords.sort()) === JSON.stringify(tiles.filter(tile => tile.isSelected).map(tile => tile.word).sort())
-                        )
-                          ? 'bg-black text-white hover:bg-gray-800' 
-                          : 'bg-gray-100 text-gray-400 border border-gray-300'
-                      }`}
-                    >
-                      Shoot!
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
         </div>
       </div>
       <footer className="w-full text-center py-2 text-xs text-gray-500 sticky bottom-0 bg-white">
