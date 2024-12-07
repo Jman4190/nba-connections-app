@@ -31,14 +31,14 @@ def insert_theme(theme, theme_description, sql_query, used_in_puzzle=False):
         return None
 
 
-def get_players(sql_query):
+def get_players(stat_code):
     """Executes the SQL query to retrieve players."""
     try:
         print("Executing player retrieval query...")
         result = (
             supabase.table("all_time_leaders")
             .select("player_name")
-            .eq("stat_category", sql_query)
+            .eq("stat_category", stat_code)
             .order("stat_value", desc=True)
             .limit(4)
             .execute()
@@ -128,7 +128,12 @@ def main():
         theme_data = {
             "theme": f"All-Time {stat_name} Leaders",
             "theme_description": f"All-Time Leaders",
-            "sql_query": stat_code,  # Just pass the stat_code instead of full SQL
+            "sql_query": f"""
+                SELECT player_name
+                FROM all_time_leaders
+                WHERE stat_category = '{stat_code}'
+                ORDER BY stat_value DESC;
+            """,
         }
 
         try:
@@ -140,7 +145,7 @@ def main():
             )
 
             if theme_id:
-                players = get_players(theme_data["sql_query"])
+                players = get_players(stat_code)
                 if players:
                     processed_players = process_players(players)
                     if processed_players and len(processed_players) >= 4:
