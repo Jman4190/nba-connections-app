@@ -14,7 +14,15 @@ import time
 
 
 def setup_logging():
-    log_filename = f"failed_seasons_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+    # Create logs directory if it doesn't exist
+    logs_dir = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "logs"
+    )
+    os.makedirs(logs_dir, exist_ok=True)
+
+    log_filename = os.path.join(
+        logs_dir, f"draft_history_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+    )
     logging.basicConfig(
         filename=log_filename, level=logging.ERROR, format="%(asctime)s - %(message)s"
     )
