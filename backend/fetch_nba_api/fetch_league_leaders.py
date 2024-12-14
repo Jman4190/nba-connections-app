@@ -126,10 +126,6 @@ def fetch_and_store_league_leaders():
                         print(response)
                         print("\n")
 
-                        # Only process the first record for each category
-                        break
-
-                    print(f"Processed {category} leaders for season {season}")
                 else:
                     print(f"No data available for {category} in season {season}")
 
