@@ -29,11 +29,23 @@ def setup_logging():
 def fetch_and_store_league_leaders():
     setup_logging()
     seasons = get_total_seasons()
-    stat_categories = ["PTS", "AST", "REB", "STL", "BLK", "FG_PCT", "FG3_PCT", "FT_PCT"]
+    stat_categories = [
+        "PTS",
+        "AST",
+        "REB",
+        "STL",
+        "BLK",
+        "FG3M",
+        "FG_PCT",
+        "FG3_PCT",
+        "FT_PCT",
+    ]
 
     for season in seasons:
-        try:
-            for category in stat_categories:
+        print(f"\nProcessing season: {season}")
+        for category in stat_categories:
+            print(f"\nAttempting to fetch {category} leaders for {season}")
+            try:
                 leaders = leagueleaders.LeagueLeaders(
                     league_id="00",
                     per_mode48="PerGame",
@@ -42,6 +54,17 @@ def fetch_and_store_league_leaders():
                     season_type_all_star="Regular Season",
                     stat_category_abbreviation=category,
                 ).get_data_frames()[0]
+
+                if leaders.empty:
+                    print(f"No data returned for {category} in {season}")
+                    logging.warning(
+                        f"Empty dataset received for {category} in {season}"
+                    )
+                    continue
+
+                print(f"Found {len(leaders)} records for {category}")
+                print(f"Sample data for {category}:")
+                print(leaders.head(1))
 
                 if not leaders.empty:
                     for _, row in leaders.iterrows():
@@ -64,7 +87,10 @@ def fetch_and_store_league_leaders():
                             ]:
                                 try:
                                     record[field] = float(record[field])
-                                except ValueError:
+                                except ValueError as e:
+                                    logging.error(
+                                        f"Value conversion failed for {field}: {record[field]} in {season} {category}"
+                                    )
                                     # If conversion fails, keep the original value
                                     pass
 
@@ -131,9 +157,12 @@ def fetch_and_store_league_leaders():
 
                 time.sleep(1)  # To avoid hitting API rate limits
 
-        except Exception as e:
-            logging.error(f"Error fetching data for season {season}: {e}")
-            continue
+            except Exception as e:
+                if "Expecting value" in str(e):
+                    print(f"No data available for {category} in {season}")
+                    continue
+                else:
+                    raise e
 
     print("League leaders data updated successfully.")
 

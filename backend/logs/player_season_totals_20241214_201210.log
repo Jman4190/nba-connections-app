@@ -1,0 +1,4 @@
+2024-12-14 21:01:27,111 - [1126/5034] Error processing Juan Dixon: HTTPSConnectionPool(host='stats.nba.com', port=443): Read timed out. (read timeout=30)
+2024-12-14 22:57:54,787 - [3878/5034] Error processing Trevor Ruffin: ('Connection aborted.', ConnectionResetError(54, 'Connection reset by peer'))
+2024-12-14 23:00:58,744 - [3939/5034] Error processing Predrag Savovic: HTTPSConnectionPool(host='stats.nba.com', port=443): Read timed out. (read timeout=30)
+2024-12-14 23:01:35,058 - [3943/5034] Error processing Dewayne Scales: HTTPSConnectionPool(host='stats.nba.com', port=443): Read timed out. (read timeout=30)
