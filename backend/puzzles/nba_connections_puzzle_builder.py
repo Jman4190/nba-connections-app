@@ -6,6 +6,7 @@ from supabase import create_client
 from datetime import datetime, timedelta
 from pydantic import BaseModel
 from typing import List
+from openai import OpenAI
 
 load_dotenv()
 
@@ -13,6 +14,12 @@ SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+if not OPENAI_API_KEY:
+    raise ValueError("Please set the OPENAI_API_KEY environment variable.")
+
+openai.api_key = OPENAI_API_KEY
 
 
 class PuzzleGroup(BaseModel):
@@ -22,90 +29,89 @@ class PuzzleGroup(BaseModel):
     words: List[str]
 
 
-def choose_best_four_players(theme, player_candidates, other_selected_players):
-    MODEL = "gpt-4o-mini"  # Replace with a valid model name
-    # Ensure `openai.api_key` is set above
+def choose_best_four_players(theme, player_candidates, all_puzzles):
+    MODEL = "gpt-4o-mini-2024-07-18"
+
+    # We now include the entire puzzles data in the prompt for context
+    # Removed references to uniqueness of colors
     prompt = f"""
-You are helping generate a puzzle of NBA players grouped by a theme.
-You are given a theme: "{theme['theme']}".
-Below is a list of candidate players for this theme:
-{json.dumps(player_candidates, indent=2)}
+You are an AI assistant tasked with generating a connections puzzle of NBA players grouped by themes. Your job is to analyze the given puzzle data and assign difficulty levels (represented by colors and emojis) to each theme based on the players in that theme.
 
-Select exactly 4 players that best represent this theme. They must be distinct and well-known examples fitting the theme.
+Here's the puzzle data:
 
-Constraints:
-- The 4 players you choose cannot include any players in this list:
-{json.dumps(list(other_selected_players), indent=2)}
+<puzzle_data>
+{json.dumps(all_puzzles, indent=2)}
+</puzzle_data>
 
-IMPORTANT: Return ONLY a JSON array of 4 player names, nothing else. For example:
-["Player 1", "Player 2", "Player 3", "Player 4"]
-"""
+Your task is to assign a color and emoji to each theme based on the difficulty of the players in the theme. Here are the difficulty levels and their corresponding color+emoji pairs:
 
-    completion = openai.ChatCompletion.create(
+- Yellow (🟨) = easiest
+- Green (🟩) = moderate difficulty
+- Blue (🟦) = fairly hard
+- Purple (🟪) = most challenging
+
+Guidelines for assessing difficulty:
+- Recognizable NBA player names are considered the easiest (Yellow)
+- Pre-2000 dates are considered fairly hard or most challenging (Blue or Purple)
+- Obscure stats (e.g., steals) are harder than well-known stats (e.g., points)
+
+Important: Each theme must be assigned a unique color. No two themes should have the same color.
+
+Before providing your final output, think through the following analysis on your own internal scratchpad:
+1. List all themes and their players.
+2. For each theme, assess the difficulty of each player and provide a brief justification.
+3. Rank the themes from easiest to hardest based on your player assessments.
+4. Assign colors to the ranked themes, ensuring uniqueness.
+
+Your final output must be a JSON object in the following format:
+
+{{
+   "color": "bg-yellow-200",
+   "emoji": "🟨",
+   "theme": "Example Theme",
+   "words": ["Player1", "Player2", "Player3", "Player4"]
+}}
+
+Please begin internal scratchpad analysis, then provide the JSON output.
+""".strip()
+
+    client = OpenAI()
+    completion = client.chat.completions.create(
         model=MODEL,
         messages=[{"role": "user", "content": prompt}],
-        max_tokens=200,
+        max_tokens=4000,
         temperature=0,
     )
 
-    chosen_players = completion.choices[0].message.content.strip()
-    cleaned_content = chosen_players.replace("```json", "").replace("```", "").strip()
+    cleaned_content = completion.choices[0].message.content.strip()
 
+    # Add debug logging
+    print("Raw OpenAI response:", cleaned_content)
+
+    # Parse and validate the structured output
     try:
-        chosen_list = json.loads(cleaned_content)
-        if isinstance(chosen_list, dict):
-            chosen_list = chosen_list.get("players", [])
-        if len(chosen_list) != 4:
-            raise ValueError("Did not return exactly 4 players.")
-        return chosen_list
-    except:
-        raise ValueError("OpenAI response not valid JSON or not 4 players")
-
-
-def assign_color_and_emoji_to_puzzles(puzzles):
-    # According to rules:
-    #  - Yellow = easiest (🟨)
-    #  - Green = moderate (🟩)
-    #  - Blue = fairly hard (🟦)
-    #  - Purple = most challenging (🟪)
-    #
-    # Difficulty is influenced by popularity and date:
-    # If using dates before 2000 or more obscure, it's harder.
-    # We need one of each color exactly once per puzzle set.
-    #
-    # For simplicity, let's just assign them in order, ensuring no repeats:
-    # We'll create a simple heuristic:
-    # Themes with older drafts = more challenging.
-    # Let's say:
-    #   #3 Overall, #4 Overall: older, harder -> Purple or Blue
-    #   #6 Overall, #13 Overall: more recent or mixed -> Green or Yellow
-    # We'll ensure one of each color in the final result.
-
-    colors = [
-        {"color_code": "bg-yellow-200", "emoji": "🟨"},
-        {"color_code": "bg-green-200", "emoji": "🟩"},
-        {"color_code": "bg-blue-200", "emoji": "🟦"},
-        {"color_code": "bg-purple-200", "emoji": "🟪"},
-    ]
-
-    result = []
-    for i, puzzle in enumerate(puzzles):
-        c = colors[i % len(colors)]  # Cycle through colors
-        pg = PuzzleGroup(
-            color=c["color_code"],
-            emoji=c["emoji"],
-            theme=puzzle["theme"],
-            words=puzzle["words"],
-        )
-        result.append(pg.dict())
-    return result
+        puzzle_group = json.loads(cleaned_content)
+        print(puzzle_group)
+        validated_group = PuzzleGroup(**puzzle_group)  # Use Pydantic for validation
+        print(validated_group)
+        return validated_group
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Failed to parse JSON: {e}")
+    except ValidationError as e:
+        raise ValueError(f"Validation error: {e}")
 
 
 def get_eligible_puzzle():
-    response = supabase.table("eligible_puzzles").select("*").execute()
+    response = (
+        supabase.table("eligible_puzzles")
+        .select("*")
+        .eq("is_verified", True)
+        .eq("add_to_puzzles", False)
+        .execute()
+    )
     if not response.data:
         raise ValueError("No eligible puzzles found")
-    return response.data[0]  # Get the first eligible puzzle
+    return response.data[0]
 
 
 def get_next_puzzle_id():
@@ -134,6 +140,8 @@ def get_next_available_date():
 
 
 def insert_puzzle(puzzle_groups, todays_theme):
+    eligible_puzzle_id = get_eligible_puzzle()["id"]
+
     data = {
         "puzzle_id": get_next_puzzle_id(),
         "groups": puzzle_groups,
@@ -141,7 +149,13 @@ def insert_puzzle(puzzle_groups, todays_theme):
         "author": "John Mannelly",
         "date": get_next_available_date().isoformat(),
     }
-    return supabase.table("puzzles").insert(data).execute()
+    puzzle_result = supabase.table("puzzles").insert(data).execute()
+
+    supabase.table("eligible_puzzles").update({"add_to_puzzles": True}).eq(
+        "id", eligible_puzzle_id
+    ).execute()
+
+    return puzzle_result
 
 
 if __name__ == "__main__":
@@ -149,9 +163,10 @@ if __name__ == "__main__":
     puzzles = eligible_puzzle["puzzle_players"]
     todays_theme = eligible_puzzle["daily_theme"]
 
-    # Process the puzzles
-    final_puzzles = assign_color_and_emoji_to_puzzles(puzzles)
+    updated_puzzles = []
+    for puzzle in puzzles:
+        updated_puzzle = choose_best_four_players(puzzle, puzzle["words"], puzzles)
+        updated_puzzles.append(updated_puzzle)
 
-    # Insert into puzzles table
-    result = insert_puzzle(final_puzzles, todays_theme)
+    result = insert_puzzle(updated_puzzles, todays_theme)
     print(f"Inserted puzzle with theme: {todays_theme}")
