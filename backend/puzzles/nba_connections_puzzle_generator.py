@@ -172,6 +172,7 @@ def save_puzzle_to_db(puzzle_groups):
         "created_at": datetime.now().isoformat(),
         "puzzle_players": formatted_groups,
         "daily_theme": puzzle_groups[0][0]["theme_description"],
+        "is_verified": False,
     }
 
     result = supabase.table("eligible_puzzles").insert(puzzle_data).execute()

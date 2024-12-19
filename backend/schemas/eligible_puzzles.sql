@@ -3,7 +3,8 @@ CREATE TABLE eligible_puzzles(
     puzzle_players jsonb NOT NULL,
     daily_theme text NOT NULL,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    is_verified boolean DEFAULT FALSE
 );
 
 -- Index for faster JSON queries
