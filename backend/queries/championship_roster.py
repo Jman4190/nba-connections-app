@@ -49,7 +49,7 @@ def insert_theme(team_name, year):
         ROUND(ps.points_per_game::numeric, 1) AS ppg
     FROM championship_roster cr
     JOIN player_stats ps ON cr.player_id = ps.player_id
-    WHERE ps.points_per_game > 5
+    WHERE ps.points_per_game > 7
     ORDER BY ps.points_per_game DESC;
     """
 

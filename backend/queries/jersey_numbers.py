@@ -5,10 +5,10 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from supabase_client import supabase
 
-# Set up logging
+# Simpler logging setup - only INFO level and above
 logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s - %(levelname)s - %(message)s",
+    level=logging.INFO,
+    format="%(message)s",
     handlers=[logging.FileHandler("jersey_numbers.log"), logging.StreamHandler()],
 )
 logger = logging.getLogger(__name__)
@@ -35,58 +35,45 @@ JERSEY_NUMBERS = [
 
 def get_jersey_players(jersey_number):
     try:
-        query = (
+        # First get the roster data
+        roster_result = (
             supabase.from_("common_team_roster")
-            .select(
-                """
-            player_id,
-            player,
-            season,
-            num,
-            leagueid
-            """
-            )
+            .select("player_id, season")
             .eq("num", jersey_number)
-            .eq("leagueid", "00")
+            .gte("season", "1990")
+            .execute()
         )
 
-        result = query.execute()
+        # Get unique player IDs
+        player_ids = list(set(row["player_id"] for row in roster_result.data))
 
-        # Group by player and calculate total games
-        player_jersey_games = {}
-        for row in result.data:
-            player_id = row["player_id"]
-            if player_id not in player_jersey_games:
-                player_jersey_games[player_id] = {
-                    "games": 0,
-                    "name": row["player"],
-                    "seasons": [],
-                }
-            player_jersey_games[player_id]["seasons"].append(row["season"])
-            player_jersey_games[player_id]["games"] += 1
-
-        # Get career minutes
-        player_ids = list(player_jersey_games.keys())
         if not player_ids:
             return []
 
-        minutes_result = (
-            supabase.from_("player_career_stats")
-            .select("player_id, min")
+        # Then get player names
+        player_result = (
+            supabase.from_("common_player_info")
+            .select("player_id, display_first_last")
             .in_("player_id", player_ids)
             .execute()
         )
 
-        qualified_players = []
-        for player_id, data in player_jersey_games.items():
-            if player_id in [r["player_id"] for r in minutes_result.data]:
-                minutes = next(
-                    r["min"] for r in minutes_result.data if r["player_id"] == player_id
-                )
-                if minutes >= 20000:
-                    qualified_players.append(data["name"])
+        # Create player ID to name mapping
+        player_names = {
+            p["player_id"]: p["display_first_last"] for p in player_result.data
+        }
 
-        return qualified_players
+        # Count seasons per player
+        player_seasons = {}
+        for row in roster_result.data:
+            name = player_names.get(row["player_id"])
+            if name:
+                if name not in player_seasons:
+                    player_seasons[name] = 0
+                player_seasons[name] += 1
+
+        # Return players with 10+ seasons
+        return [name for name, count in player_seasons.items() if count >= 10]
 
     except Exception as e:
         print(f"Error fetching players for jersey #{jersey_number}: {e}")

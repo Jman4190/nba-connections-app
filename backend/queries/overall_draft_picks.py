@@ -11,6 +11,7 @@ def get_draft_picks(pick_number):
             supabase.table("draft_history")
             .select("player_name, season, team_name")
             .eq("overall_pick", pick_number)
+            .gte("season", 1990)
             .order("season", desc=True)
             .execute()
         )
@@ -32,6 +33,7 @@ def insert_theme(pick_number):
             draft_history
         WHERE
             overall_pick = {pick_number}
+            AND season >= 1990
         ORDER BY
             season DESC;
     """

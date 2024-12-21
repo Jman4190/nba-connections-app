@@ -98,8 +98,8 @@ def insert_theme_players(theme_id, players):
 
 
 def main():
-    # Loop through seasons from 1980 to 2023
-    for season in range(1980, 2024):
+    # Modified season range to start from 2000
+    for season in range(2000, 2024):
         print(f"\nProcessing {season} draft class...")
 
         theme_id = insert_theme(season)

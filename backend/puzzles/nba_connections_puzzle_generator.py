@@ -183,4 +183,4 @@ def save_puzzle_to_db(puzzle_groups):
 
 
 if __name__ == "__main__":
-    create_puzzles(max_puzzles=10)
+    create_puzzles(max_puzzles=100)

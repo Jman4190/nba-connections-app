@@ -41,7 +41,7 @@ def get_college_players(college):
         GROUP BY
             player_id
         HAVING
-            SUM(min) > 10000
+            SUM(min) > 15000
     )
     """
     try:
@@ -127,7 +127,7 @@ def main():
             SELECT player_id, SUM(min) AS total_minutes
             FROM player_career_stats
             GROUP BY player_id
-            HAVING SUM(min) > 10000
+            HAVING SUM(min) > 15000
         )
         SELECT
             dh.player_name,
