@@ -32,6 +32,9 @@ class PuzzleGroup(BaseModel):
 def choose_best_four_players(theme, player_candidates, all_puzzles):
     MODEL = "gpt-4o-mini-2024-07-18"
 
+    print("\n=== Input Puzzle Data ===")
+    print(json.dumps(all_puzzles, indent=2))
+
     # We now include the entire puzzles data in the prompt for context
     # Removed references to uniqueness of colors
     prompt = f"""
@@ -52,27 +55,59 @@ Your task is to assign a color and emoji to each theme based on the difficulty o
 
 Guidelines for assessing difficulty:
 - Recognizable NBA player names are considered the easiest (Yellow)
-- Pre-2000 dates are considered fairly hard or most challenging (Blue or Purple)
+- Players, teams, and stats from before the 1999 season are considered fairly hard or most challenging (Blue or Purple)
 - Obscure stats (e.g., steals) are harder than well-known stats (e.g., points)
 
 Important: Each theme must be assigned a unique color. No two themes should have the same color.
 
-Before providing your final output, think through the following analysis on your own internal scratchpad:
-1. List all themes and their players.
-2. For each theme, assess the difficulty of each player and provide a brief justification.
-3. Rank the themes from easiest to hardest based on your player assessments.
-4. Assign colors to the ranked themes, ensuring uniqueness.
-
 Your final output must be a JSON object in the following format:
 
-{{
-   "color": "bg-yellow-200",
-   "emoji": "🟨",
-   "theme": "Example Theme",
-   "words": ["Player1", "Player2", "Player3", "Player4"]
-}}
-
-Please begin internal scratchpad analysis, then provide the JSON output.
+[
+  {{
+    "color": "bg-yellow-200",
+    "emoji": "🟨",
+    "theme": "Example Theme 1",
+    "words": [
+      "Player1",
+      "Player2",
+      "Player3",
+      "Player4"
+    ]
+  }},
+  {{
+    "color": "bg-green-200",
+    "emoji": "🟩",
+    "theme": "Example Theme 2",
+    "words": [
+      "Player5",
+      "Player6",
+      "Player7",
+      "Player8"
+    ]
+  }},
+  {{
+    "color": "bg-blue-200",
+    "emoji": "🟦",
+    "theme": "Example Theme 3",
+    "words": [
+      "Player9",
+      "Player10",
+      "Player11",
+      "Player12"
+    ]
+  }},
+  {{
+    "color": "bg-purple-200",
+    "emoji": "🟪",
+    "theme": "Example Theme 4",
+    "words": [
+      "Player13",
+      "Player14",
+      "Player15",
+      "Player16"
+    ]
+  }}
+]
 """.strip()
 
     client = OpenAI()
@@ -84,21 +119,29 @@ Please begin internal scratchpad analysis, then provide the JSON output.
     )
 
     cleaned_content = completion.choices[0].message.content.strip()
+    print("\n=== GPT Response ===")
+    print(cleaned_content)
 
-    # Add debug logging
-    print("Raw OpenAI response:", cleaned_content)
-
-    # Parse and validate the structured output
     try:
-        puzzle_group = json.loads(cleaned_content)
-        print(puzzle_group)
-        validated_group = PuzzleGroup(**puzzle_group)  # Use Pydantic for validation
-        print(validated_group)
-        return validated_group
-    except json.JSONDecodeError as e:
-        raise ValueError(f"Failed to parse JSON: {e}")
-    except ValidationError as e:
-        raise ValueError(f"Validation error: {e}")
+        json_start = cleaned_content.find("```json\n") + 8
+        json_end = cleaned_content.rfind("```")
+        json_str = cleaned_content[json_start:json_end].strip()
+
+        print("\n=== Parsed JSON ===")
+        print(json_str)
+
+        puzzle_groups = [PuzzleGroup(**group) for group in json.loads(json_str)]
+        print(f"\n=== Number of Puzzle Groups: {len(puzzle_groups)} ===")
+        for i, group in enumerate(puzzle_groups, 1):
+            print(f"\nGroup {i}:")
+            print(f"Color: {group.color}")
+            print(f"Emoji: {group.emoji}")
+            print(f"Theme: {group.theme}")
+            print(f"Words: {group.words}")
+
+        return puzzle_groups
+    except (json.JSONDecodeError, IndexError) as e:
+        raise ValueError(f"Failed to parse JSON: {e}\nContent: {cleaned_content}")
 
 
 def get_eligible_puzzle():
@@ -140,11 +183,19 @@ def get_next_available_date():
 
 
 def insert_puzzle(puzzle_groups, todays_theme):
+    print("\n=== Inserting Puzzle ===")
+    print(f"Theme: {todays_theme}")
+    print(f"Number of groups being inserted: {len(puzzle_groups)}")
+
     eligible_puzzle_id = get_eligible_puzzle()["id"]
+    serialized_groups = [group.model_dump() for group in puzzle_groups]
+
+    print("\n=== Serialized Groups ===")
+    print(json.dumps(serialized_groups, indent=2))
 
     data = {
         "puzzle_id": get_next_puzzle_id(),
-        "groups": puzzle_groups,
+        "groups": serialized_groups,  # Use serialized groups instead of PuzzleGroup objects
         "todays_theme": todays_theme,
         "author": "John Mannelly",
         "date": get_next_available_date().isoformat(),
@@ -159,14 +210,12 @@ def insert_puzzle(puzzle_groups, todays_theme):
 
 
 if __name__ == "__main__":
+    print("\n=== Starting Puzzle Generation ===")
     eligible_puzzle = get_eligible_puzzle()
     puzzles = eligible_puzzle["puzzle_players"]
     todays_theme = eligible_puzzle["daily_theme"]
 
-    updated_puzzles = []
-    for puzzle in puzzles:
-        updated_puzzle = choose_best_four_players(puzzle, puzzle["words"], puzzles)
-        updated_puzzles.append(updated_puzzle)
-
-    result = insert_puzzle(updated_puzzles, todays_theme)
-    print(f"Inserted puzzle with theme: {todays_theme}")
+    print(f"\nToday's Theme: {todays_theme}")
+    all_puzzle_groups = choose_best_four_players(None, None, puzzles)
+    result = insert_puzzle(all_puzzle_groups, todays_theme)
+    print("\n=== Puzzle Generation Complete ===")
