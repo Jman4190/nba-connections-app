@@ -144,19 +144,6 @@ Your final output must be a JSON object in the following format:
         raise ValueError(f"Failed to parse JSON: {e}\nContent: {cleaned_content}")
 
 
-def get_eligible_puzzle():
-    response = (
-        supabase.table("eligible_puzzles")
-        .select("*")
-        .eq("is_verified", True)
-        .eq("add_to_puzzles", False)
-        .execute()
-    )
-    if not response.data:
-        raise ValueError("No eligible puzzles found")
-    return response.data[0]
-
-
 def get_next_puzzle_id():
     response = (
         supabase.table("puzzles")
@@ -182,12 +169,11 @@ def get_next_available_date():
     return last_date + timedelta(days=1)
 
 
-def insert_puzzle(puzzle_groups, todays_theme):
+def insert_puzzle(puzzle_groups, todays_theme, eligible_puzzle_id):
     print("\n=== Inserting Puzzle ===")
     print(f"Theme: {todays_theme}")
     print(f"Number of groups being inserted: {len(puzzle_groups)}")
 
-    eligible_puzzle_id = get_eligible_puzzle()["id"]
     serialized_groups = [group.model_dump() for group in puzzle_groups]
 
     print("\n=== Serialized Groups ===")
@@ -195,7 +181,7 @@ def insert_puzzle(puzzle_groups, todays_theme):
 
     data = {
         "puzzle_id": get_next_puzzle_id(),
-        "groups": serialized_groups,  # Use serialized groups instead of PuzzleGroup objects
+        "groups": serialized_groups,
         "todays_theme": todays_theme,
         "author": "John Mannelly",
         "date": get_next_available_date().isoformat(),
@@ -211,11 +197,41 @@ def insert_puzzle(puzzle_groups, todays_theme):
 
 if __name__ == "__main__":
     print("\n=== Starting Puzzle Generation ===")
-    eligible_puzzle = get_eligible_puzzle()
-    puzzles = eligible_puzzle["puzzle_players"]
-    todays_theme = eligible_puzzle["daily_theme"]
 
-    print(f"\nToday's Theme: {todays_theme}")
-    all_puzzle_groups = choose_best_four_players(None, None, puzzles)
-    result = insert_puzzle(all_puzzle_groups, todays_theme)
-    print("\n=== Puzzle Generation Complete ===")
+    # Get all eligible puzzles
+    response = (
+        supabase.table("eligible_puzzles")
+        .select("*")
+        .eq("is_verified", True)
+        .eq("add_to_puzzles", False)
+        .execute()
+    )
+
+    eligible_puzzles = response.data
+    print(f"Found {len(eligible_puzzles)} eligible puzzles to process")
+
+    for i, eligible_puzzle in enumerate(eligible_puzzles, 1):
+        print(f"\n=== Processing puzzle {i}/{len(eligible_puzzles)} ===")
+        print(f"Puzzle ID: {eligible_puzzle['id']}")
+
+        try:
+            puzzles = eligible_puzzle["puzzle_players"]
+            todays_theme = eligible_puzzle["daily_theme"]
+
+            print(f"Theme: {todays_theme}")
+            print("Generating puzzle groups...")
+
+            all_puzzle_groups = choose_best_four_players(None, None, puzzles)
+
+            print("Inserting puzzle into puzzles table...")
+            result = insert_puzzle(
+                all_puzzle_groups, todays_theme, eligible_puzzle["id"]
+            )
+
+            print(f"Successfully processed puzzle {i}")
+
+        except Exception as e:
+            print(f"Error processing puzzle {i}: {e}")
+            continue
+
+    print("\n=== Finished processing all eligible puzzles ===")

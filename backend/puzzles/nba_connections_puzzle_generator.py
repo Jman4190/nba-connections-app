@@ -5,6 +5,8 @@ import openai
 from dotenv import load_dotenv
 from supabase import create_client
 from datetime import datetime
+import time
+from httpx import RemoteProtocolError
 
 load_dotenv()
 
@@ -25,15 +27,24 @@ def get_themes():
     return theme_map
 
 
-def get_unused_players(theme_id):
-    res = (
-        supabase.table("theme_players")
-        .select("*")
-        .eq("theme_id", theme_id)
-        .eq("used_in_puzzle", False)
-        .execute()
-    )
-    return res.data if res.data else []
+def get_unused_players(theme_id, max_retries=3):
+    for attempt in range(max_retries):
+        try:
+            res = (
+                supabase.table("theme_players")
+                .select("*")
+                .eq("theme_id", theme_id)
+                .eq("used_in_puzzle", False)
+                .execute()
+            )
+            return res.data if res.data else []
+        except RemoteProtocolError:
+            if attempt == max_retries - 1:
+                raise
+            print(
+                f"Connection error, retrying... (attempt {attempt + 1}/{max_retries})"
+            )
+            time.sleep(1)  # Add delay between retries
 
 
 def pick_four_unused_players(theme_id):
@@ -50,12 +61,10 @@ def mark_players_used(player_ids):
     ).execute()
 
 
-def mark_theme_if_exhausted(theme_id):
-    remaining = get_unused_players(theme_id)
-    if len(remaining) < 4:
-        supabase.table("new_themes").update({"used_in_puzzle": True}).eq(
-            "theme_id", theme_id
-        ).execute()
+def mark_theme_used(theme_id):
+    supabase.table("new_themes").update({"used_in_puzzle": True}).eq(
+        "theme_id", theme_id
+    ).execute()
 
 
 def create_puzzles(max_puzzles=100):
@@ -67,96 +76,87 @@ def create_puzzles(max_puzzles=100):
     for theme_desc, theme_list in theme_map.items():
         viable_themes = []
         for th in theme_list:
-            if not th["used_in_puzzle"]:
-                unused_count = len(get_unused_players(th["theme_id"]))
-                if unused_count >= 4:
-                    viable_themes.append(th)
-        if len(viable_themes) >= 4:  # Need at least 4 viable themes per description
+            unused_count = len(get_unused_players(th["theme_id"]))
+            if unused_count >= 4:
+                viable_themes.append(th)
+        if len(viable_themes) >= 4:
             theme_desc_groups[theme_desc] = viable_themes
 
     print(f"Found {len(theme_desc_groups)} viable theme descriptions")
 
     while puzzles_created < max_puzzles and theme_desc_groups:
-        print(f"\nAttempting puzzle {puzzles_created + 1}...")
-
-        # Pick a random theme description that has enough viable themes
-        viable_descriptions = [
-            desc for desc, themes in theme_desc_groups.items() if len(themes) >= 4
-        ]
-        if not viable_descriptions:
-            break
-
-        chosen_desc = random.choice(viable_descriptions)
-        chosen_themes = random.sample(theme_desc_groups[chosen_desc], 4)
-        print(f"Selected theme description: {chosen_desc}")
-        print(f"Selected theme IDs: {[t['theme_id'] for t in chosen_themes]}")
-
-        puzzle_groups = []
-        all_player_ids = set()
-
-        valid_puzzle = True
-        for ct in chosen_themes:
-            selected_players = pick_four_unused_players(ct["theme_id"])
-            if not selected_players:
-                print(f"Failed to get players for theme {ct['theme_id']}")
-                valid_puzzle = False
-                break
-
-            current_player_ids = {p["player_id"] for p in selected_players}
-            if len(current_player_ids) != 4:
-                print(f"Duplicate players in theme {ct['theme_id']}")
-                valid_puzzle = False
-                break
-
-            if any(pid in all_player_ids for pid in current_player_ids):
-                print(f"Player overlap detected with theme {ct['theme_id']}")
-                valid_puzzle = False
-                break
-
-            all_player_ids.update(current_player_ids)
-            puzzle_groups.append((ct, selected_players))
-
-        if not valid_puzzle:
-            print("Puzzle invalid, removing themes and trying again")
-            # Remove used themes from the description group
-            theme_desc_groups[chosen_desc] = [
-                t
-                for t in theme_desc_groups[chosen_desc]
-                if t["theme_id"] not in [ct["theme_id"] for ct in chosen_themes]
-            ]
-            # Remove description if not enough themes left
-            if len(theme_desc_groups[chosen_desc]) < 4:
-                del theme_desc_groups[chosen_desc]
-            continue
-
         try:
-            save_puzzle_to_db(puzzle_groups)
+            # Add periodic delay every N puzzles to avoid overwhelming the connection
+            if puzzles_created > 0 and puzzles_created % 10 == 0:
+                print("Taking a short break to avoid connection issues...")
+                time.sleep(2)
 
-            # Only mark as used if save was successful
-            for _, players in puzzle_groups:
-                player_ids = [p["player_id"] for p in players]
-                print(f"Marking players as used: {player_ids}")
-                mark_players_used(player_ids)
+            print(f"\nAttempting puzzle {puzzles_created + 1}...")
 
-            # Mark themes as used if they're exhausted
-            for theme, _ in puzzle_groups:
-                print(f"Checking if theme {theme['theme_id']} is exhausted")
-                mark_theme_if_exhausted(theme["theme_id"])
-
-            puzzles_created += 1
-            print(f"Puzzle {puzzles_created} successfully created and saved!")
-
-            # Update viable themes for this description
-            theme_desc_groups[chosen_desc] = [
-                t
-                for t in theme_desc_groups[chosen_desc]
-                if t["theme_id"] not in [ct["theme_id"] for ct in chosen_themes]
+            # Pick a random theme description that has enough viable themes
+            viable_descriptions = [
+                desc for desc, themes in theme_desc_groups.items() if len(themes) >= 4
             ]
-            if len(theme_desc_groups[chosen_desc]) < 4:
-                del theme_desc_groups[chosen_desc]
+            if not viable_descriptions:
+                break
+
+            chosen_desc = random.choice(viable_descriptions)
+            chosen_themes = random.sample(theme_desc_groups[chosen_desc], 4)
+            print(f"Selected theme description: {chosen_desc}")
+            print(f"Selected theme IDs: {[t['theme_id'] for t in chosen_themes]}")
+
+            puzzle_groups = []
+            all_player_ids = set()
+
+            valid_puzzle = True
+            for ct in chosen_themes:
+                selected_players = pick_four_unused_players(ct["theme_id"])
+                if not selected_players:
+                    print(f"Failed to get players for theme {ct['theme_id']}")
+                    valid_puzzle = False
+                    break
+
+                current_player_ids = {p["player_id"] for p in selected_players}
+                if len(current_player_ids) != 4:
+                    print(f"Duplicate players in theme {ct['theme_id']}")
+                    valid_puzzle = False
+                    break
+
+                if any(pid in all_player_ids for pid in current_player_ids):
+                    print(f"Player overlap detected with theme {ct['theme_id']}")
+                    valid_puzzle = False
+                    break
+
+                all_player_ids.update(current_player_ids)
+                puzzle_groups.append((ct, selected_players))
+
+            if not valid_puzzle:
+                print("Puzzle invalid, trying different theme combination")
+                continue
+
+            try:
+                save_puzzle_to_db(puzzle_groups)
+
+                # Mark players as used
+                for _, players in puzzle_groups:
+                    player_ids = [p["player_id"] for p in players]
+                    mark_players_used(player_ids)
+
+                # Mark themes as used
+                for theme, _ in puzzle_groups:
+                    mark_theme_used(theme["theme_id"])
+
+                puzzles_created += 1
+                print(f"Puzzle {puzzles_created} successfully created and saved!")
+
+            except Exception as e:
+                print(f"Failed to save puzzle: {e}")
+                continue
 
         except Exception as e:
-            print(f"Failed to save puzzle: {e}")
+            print(f"Error creating puzzle: {e}")
+            print("Taking a break before continuing...")
+            time.sleep(5)  # Longer delay after errors
             continue
 
     print(f"\nCreated {puzzles_created} puzzles")
@@ -182,5 +182,45 @@ def save_puzzle_to_db(puzzle_groups):
     return result
 
 
+def process_all_eligible_puzzles():
+    print("\n=== Starting to process all eligible puzzles ===")
+
+    # Get all eligible unprocessed puzzles
+    response = (
+        supabase.table("eligible_puzzles")
+        .select("*")
+        .eq("is_verified", True)
+        .eq("add_to_puzzles", False)
+        .execute()
+    )
+
+    eligible_puzzles = response.data
+    print(f"Found {len(eligible_puzzles)} eligible puzzles to process")
+
+    for i, eligible_puzzle in enumerate(eligible_puzzles, 1):
+        print(f"\n=== Processing puzzle {i}/{len(eligible_puzzles)} ===")
+        print(f"Puzzle ID: {eligible_puzzle['id']}")
+
+        try:
+            puzzles = eligible_puzzle["puzzle_players"]
+            todays_theme = eligible_puzzle["daily_theme"]
+
+            print(f"Theme: {todays_theme}")
+            print("Generating puzzle groups...")
+
+            all_puzzle_groups = choose_best_four_players(None, None, puzzles)
+
+            print("Inserting puzzle into puzzles table...")
+            result = insert_puzzle(all_puzzle_groups, todays_theme)
+
+            print(f"Successfully processed puzzle {i}")
+
+        except Exception as e:
+            print(f"Error processing puzzle {i}: {e}")
+            continue
+
+    print("\n=== Finished processing all eligible puzzles ===")
+
+
 if __name__ == "__main__":
-    create_puzzles(max_puzzles=100)
+    process_all_eligible_puzzles()
