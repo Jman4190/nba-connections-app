@@ -4,6 +4,7 @@ import json
 import openai
 from dotenv import load_dotenv
 from supabase import create_client
+from utils.sheets_client import upsert_puzzle
 
 load_dotenv()
 
@@ -194,24 +195,16 @@ def insert_puzzle_into_db(puzzle_groups, theme_description):
             }
         )
 
-    resp = (
-        supabase.table("puzzles")
-        .insert(
-            {
-                "id": next_id,
-                "puzzle_id": next_puzzle_id,
-                "date": next_date.isoformat(),
-                "groups": formatted_groups,  # Supabase will handle JSON serialization
-                "author": "John Mannelly",
-                "todays_theme": theme_description,
-            }
-        )
-        .execute()
-    )
-
-    if not resp.data:
-        raise ValueError("Error inserting puzzle")
-    return resp.data
+    puzzle = {
+        "id": next_id,
+        "puzzle_id": next_puzzle_id,
+        "date": next_date.isoformat(),
+        "groups": formatted_groups,
+        "author": "John Mannelly",
+        "todays_theme": theme_description,
+    }
+    upsert_puzzle(puzzle)
+    return puzzle
 
 
 def main(theme_description):
