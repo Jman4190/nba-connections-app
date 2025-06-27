@@ -50,7 +50,7 @@ def upsert_puzzle(puzzle):
         puzzle.get("id"),
         puzzle["puzzle_id"],
         date,
-        json.dumps(puzzle["groups"]),
+        json.dumps(puzzle["groups"], ensure_ascii=False),
         puzzle["author"],
         puzzle.get("todays_theme"),
     ]

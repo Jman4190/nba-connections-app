@@ -1,5 +1,25 @@
 import { google } from "googleapis";
 
+function parseGroups(raw: string) {
+  const trimmed = raw?.trim() ?? "";
+  try {
+    return JSON.parse(trimmed);
+  } catch (err) {
+    try {
+      if (
+        (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+        (trimmed.startsWith("'") && trimmed.endsWith("'"))
+      ) {
+        return JSON.parse(trimmed.slice(1, -1));
+      }
+    } catch {
+      // ignore
+    }
+    console.error("Failed to parse groups", trimmed.slice(0, 30), err);
+    return null;
+  }
+}
+
 function getSheets() {
   const sheetId = process.env.GOOGLE_SHEETS_ID;
   if (!sheetId) {
@@ -68,18 +88,18 @@ export async function getPuzzleByDate(dateIso: string) {
   }
 
   const [, puzzle_id, , groups, author, todays_theme] = row;
-  try {
-    return {
-      date: dateIso,
-      puzzle_id: Number(puzzle_id),
-      groups: JSON.parse(groups),
-      author,
-      todays_theme,
-    };
-  } catch (err) {
-    console.error(`Error parsing groups for ${dateIso}`, err);
+  const parsed = parseGroups(groups);
+  if (!parsed) {
+    console.error(`Error parsing groups for ${dateIso}`);
     return null;
   }
+  return {
+    date: dateIso,
+    puzzle_id: Number(puzzle_id),
+    groups: parsed,
+    author,
+    todays_theme,
+  };
 }
 
 export async function getLatestPuzzle() {
@@ -90,16 +110,16 @@ export async function getLatestPuzzle() {
   const row = rows[rows.length - 1];
   console.log(`Latest row: ${JSON.stringify(row)}`);
   const [, puzzle_id, date, groups, author, todays_theme] = row;
-  try {
-    return {
-      date,
-      puzzle_id: Number(puzzle_id),
-      groups: JSON.parse(groups),
-      author,
-      todays_theme,
-    };
-  } catch (err) {
-    console.error("Error parsing latest puzzle", err);
+  const parsed = parseGroups(groups);
+  if (!parsed) {
+    console.error("Error parsing latest puzzle");
     return null;
   }
+  return {
+    date,
+    puzzle_id: Number(puzzle_id),
+    groups: parsed,
+    author,
+    todays_theme,
+  };
 }
