@@ -24,7 +24,7 @@
     "firebase": "^10.13.1",
     "framer-motion": "^11.5.4",
     "lucide-react": "^0.263.1",
-    "next": "^13.4.12",
+    "next": "^15.3.4",
     "next-svgr": "^0.0.2",
     "react": "^18.2.0",
     "react-confetti": "^6.1.0",
