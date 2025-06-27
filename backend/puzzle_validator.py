@@ -4,6 +4,7 @@ from pydantic import BaseModel
 import json
 from datetime import datetime, timezone, timedelta
 from supabase_client import supabase
+from utils.sheets_client import upsert_puzzle
 import logging
 
 
@@ -108,13 +109,11 @@ def insert_puzzle(puzzle: Dict, puzzle_number: int, start_date: datetime) -> boo
             "author": "admin",
         }
 
-        response = supabase.table("puzzles").insert(data).execute()
-        if response.data:
-            print(
-                f"✅ Puzzle {puzzle_number} inserted into database for {puzzle_date.date()}"
-            )
-            return True
-        return False
+        upsert_puzzle(data)
+        print(
+            f"✅ Puzzle {puzzle_number} inserted into sheet for {puzzle_date.date()}"
+        )
+        return True
     except Exception as e:
         print(f"❌ Database error: {str(e)}")
         return False

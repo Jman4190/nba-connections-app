@@ -3,6 +3,7 @@ import json
 import openai
 from dotenv import load_dotenv
 from supabase import create_client
+from utils.sheets_client import upsert_puzzle
 from datetime import datetime, timedelta
 from pydantic import BaseModel
 from typing import List
@@ -186,13 +187,12 @@ def insert_puzzle(puzzle_groups, todays_theme, eligible_puzzle_id):
         "author": "John Mannelly",
         "date": get_next_available_date().isoformat(),
     }
-    puzzle_result = supabase.table("puzzles").insert(data).execute()
+    upsert_puzzle(data)
 
     supabase.table("eligible_puzzles").update({"add_to_puzzles": True}).eq(
         "id", eligible_puzzle_id
     ).execute()
-
-    return puzzle_result
+    return data
 
 
 if __name__ == "__main__":

@@ -13,7 +13,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { createClient } from '@supabase/supabase-js'
 import BasketballIcon from '@/components/ui/BasketballIcon'
 import Link from 'next/link'
 
@@ -45,14 +44,6 @@ interface Puzzle {
   todays_theme: string;
 }
 
-const supabaseUrl = process.env.SUPABASE_URL
-const supabaseKey = process.env.SUPABASE_KEY
-
-// For client-side components, we need NEXT_PUBLIC_ prefix
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || supabaseUrl || '',
-  process.env.NEXT_PUBLIC_SUPABASE_KEY || supabaseKey || ''
-)
 
 export default function NBAConnectionsGame() {
   const [gamePhase, setGamePhase] = useState<'loading' | 'ready' | 'playing'>('loading');
@@ -73,33 +64,15 @@ export default function NBAConnectionsGame() {
   }, []); // This effect runs once when the component mounts
 
   const fetchPuzzleOfTheDay = async () => {
-    // Get local date in YYYY-MM-DD format
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
-    const formattedDate = `${year}-${month}-${day}`;
-    
-    console.log('Fetching puzzle for date:', formattedDate);
-
-    const { data, error } = await supabase
-      .from('puzzles')
-      .select('*')
-      .eq('date', formattedDate)
-      .single();
-
-    if (error) {
-      console.error('Error fetching puzzle:', error);
+    const today = new Date().toISOString().slice(0, 10);
+    const res = await fetch(`/api/puzzle?date=${today}`);
+    if (!res.ok) {
+      console.error('Error fetching puzzle:', await res.text());
       return;
     }
-
-    console.log('Fetched puzzle data:', data);
-    if (data && Array.isArray(data.groups)) {
-      setPuzzle(data);
-      setGamePhase('ready');
-    } else {
-      console.error('Invalid puzzle data structure:', data);
-    }
+    const data = await res.json();
+    setPuzzle(data);
+    setGamePhase('ready');
   };
 
   useEffect(() => {
