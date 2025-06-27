@@ -1,14 +1,17 @@
 import { NextResponse } from "next/server";
-import { getPuzzleByDate } from "@/lib/getPuzzleFromSheet";
+import { getPuzzleByDate, getLatestPuzzle } from "@/lib/getPuzzleFromSheet";
 
 export const runtime = "nodejs";
 
 export async function GET(req: Request) {
   const date = new URL(req.url).searchParams.get("date");
-  if (!date) return NextResponse.json({ error: "date required" }, { status: 400 });
+  if (date) {
+    const puzzle = await getPuzzleByDate(date);
+    if (puzzle) return NextResponse.json(puzzle);
+  }
 
-  const puzzle = await getPuzzleByDate(date);
-  return puzzle
-    ? NextResponse.json(puzzle)
+  const latest = await getLatestPuzzle();
+  return latest
+    ? NextResponse.json(latest)
     : NextResponse.json({ error: "not found" }, { status: 404 });
 }

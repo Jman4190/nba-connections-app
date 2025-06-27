@@ -25,3 +25,30 @@ export async function getPuzzleByDate(dateIso: string) {
     todays_theme,
   };
 }
+
+export async function getLatestPuzzle() {
+  const auth = new google.auth.GoogleAuth({
+    credentials: JSON.parse(
+      Buffer.from(process.env.GOOGLE_SERVICE_ACCOUNT_KEY!, "base64").toString()
+    ),
+    scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
+  });
+  const sheets = google.sheets({ version: "v4", auth });
+  const range = "puzzles!A2:E";
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId: process.env.GOOGLE_SHEETS_ID,
+    range,
+  });
+
+  const rows = res.data.values ?? [];
+  if (rows.length === 0) return null;
+
+  const [date, puzzle_id, groups, author, todays_theme] = rows[rows.length - 1];
+  return {
+    date,
+    puzzle_id: Number(puzzle_id),
+    groups: JSON.parse(groups),
+    author,
+    todays_theme,
+  };
+}
