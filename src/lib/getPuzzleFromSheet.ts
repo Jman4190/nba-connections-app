@@ -39,7 +39,7 @@ function getAuth() {
 
 async function fetchRows() {
   const { sheets, sheetId } = getSheets();
-  const range = "puzzles!A2:E";
+  const range = "puzzles!A2:F";
   console.log(`Fetching range ${range}`);
   try {
     const res = await sheets.spreadsheets.values.get({
@@ -61,13 +61,13 @@ async function fetchRows() {
 export async function getPuzzleByDate(dateIso: string) {
   console.log(`getPuzzleByDate: ${dateIso}`);
   const rows = await fetchRows();
-  const row = rows.find((r) => r[0] === dateIso);
+  const row = rows.find((r) => r[2] === dateIso);
   if (!row) {
     console.warn(`Puzzle not found for ${dateIso}`);
     return null;
   }
 
-  const [, puzzle_id, groups, author, todays_theme] = row;
+  const [, puzzle_id, , groups, author, todays_theme] = row;
   try {
     return {
       date: dateIso,
@@ -89,7 +89,7 @@ export async function getLatestPuzzle() {
 
   const row = rows[rows.length - 1];
   console.log(`Latest row: ${JSON.stringify(row)}`);
-  const [date, puzzle_id, groups, author, todays_theme] = row;
+  const [, puzzle_id, date, groups, author, todays_theme] = row;
   try {
     return {
       date,

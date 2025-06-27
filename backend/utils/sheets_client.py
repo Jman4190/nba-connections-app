@@ -39,19 +39,26 @@ def get_sheet():
 
 
 def upsert_puzzle(puzzle):
+    """Insert or update a puzzle row in the sheet.
+
+    Sheet columns are currently:
+    id | puzzle_id | date | groups | author | todays_theme
+    """
     ws = get_sheet()
     date = dt.date.fromisoformat(puzzle["date"]).isoformat()
     row = [
-        date,
+        puzzle.get("id"),
         puzzle["puzzle_id"],
+        date,
         json.dumps(puzzle["groups"]),
         puzzle["author"],
         puzzle.get("todays_theme"),
     ]
+
     logger.debug("Upserting puzzle for %s", date)
     cell = ws.find(date)
     if cell:
-        ws.update(f"A{cell.row}:E{cell.row}", [row])
+        ws.update(f"A{cell.row}:F{cell.row}", [row])
         logger.info("Updated puzzle for %s", date)
     else:
         ws.append_row(row, value_input_option="USER_ENTERED")
