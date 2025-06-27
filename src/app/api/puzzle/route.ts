@@ -13,6 +13,11 @@ export async function GET(req: Request) {
     }
 
     const latest = await getLatestPuzzle();
+    if (latest) {
+      console.log(`Returning latest puzzle for ${latest.date}`);
+    } else {
+      console.warn("No puzzles available in sheet");
+    }
     return latest
       ? NextResponse.json(latest)
       : NextResponse.json({ error: "not found" }, { status: 404 });

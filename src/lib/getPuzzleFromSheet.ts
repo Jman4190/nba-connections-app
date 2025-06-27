@@ -1,5 +1,16 @@
 import { google } from "googleapis";
 
+function getSheets() {
+  const sheetId = process.env.GOOGLE_SHEETS_ID;
+  if (!sheetId) {
+    console.error("GOOGLE_SHEETS_ID env var missing");
+    throw new Error("missing GOOGLE_SHEETS_ID");
+  }
+  const auth = getAuth();
+  console.log(`Connecting to sheet ${sheetId}`);
+  return { sheets: google.sheets({ version: "v4", auth }), sheetId };
+}
+
 function getAuth() {
   const raw = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
   if (!raw) {
@@ -26,16 +37,30 @@ function getAuth() {
   }
 }
 
+async function fetchRows() {
+  const { sheets, sheetId } = getSheets();
+  const range = "puzzles!A2:E";
+  console.log(`Fetching range ${range}`);
+  try {
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId: sheetId,
+      range,
+    });
+    const rows = res.data.values ?? [];
+    console.log(`Fetched ${rows.length} rows from sheet`);
+    if (rows.length > 0) {
+      console.debug(`First row: ${JSON.stringify(rows[0])}`);
+    }
+    return rows;
+  } catch (err) {
+    console.error("Failed to fetch rows from Google Sheets", err);
+    throw err;
+  }
+}
+
 export async function getPuzzleByDate(dateIso: string) {
   console.log(`getPuzzleByDate: ${dateIso}`);
-  const sheets = google.sheets({ version: "v4", auth: getAuth() });
-  const range = "puzzles!A2:E"; // skip header
-  const res = await sheets.spreadsheets.values.get({
-    spreadsheetId: process.env.GOOGLE_SHEETS_ID,
-    range,
-  });
-
-  const rows = res.data.values ?? [];
+  const rows = await fetchRows();
   const row = rows.find((r) => r[0] === dateIso);
   if (!row) {
     console.warn(`Puzzle not found for ${dateIso}`);
@@ -59,18 +84,12 @@ export async function getPuzzleByDate(dateIso: string) {
 
 export async function getLatestPuzzle() {
   console.log("getLatestPuzzle");
-  const sheets = google.sheets({ version: "v4", auth: getAuth() });
-  const range = "puzzles!A2:E";
-  const res = await sheets.spreadsheets.values.get({
-    spreadsheetId: process.env.GOOGLE_SHEETS_ID,
-    range,
-  });
-
-  const rows = res.data.values ?? [];
+  const rows = await fetchRows();
   if (rows.length === 0) return null;
 
-  const [date, puzzle_id, groups, author, todays_theme] = rows[rows.length - 1];
-  console.log(`Latest puzzle date: ${date}`);
+  const row = rows[rows.length - 1];
+  console.log(`Latest row: ${JSON.stringify(row)}`);
+  const [date, puzzle_id, groups, author, todays_theme] = row;
   try {
     return {
       date,
